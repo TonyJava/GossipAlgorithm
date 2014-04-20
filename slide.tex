@@ -142,7 +142,7 @@ breaklinks=true
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill Overview}
 \begin{frame}
-\frametitle{Overview}
+\frametitle{Gossip背景}
 ~~~~~~Gossip算法因为Cassandra而名声大噪，Gossip看似简单，但要真正弄清楚其本质远没看起来那么容易。为了寻求Gossip的本质，下面的内容主要参考Gossip的原始论文：《Efficient Reconciliation and Flow Control for Anti-Entropy Protocols》。
 \end{frame}
 %%%%%%%%%% Slide End %%%%%%%%%%
@@ -196,7 +196,7 @@ breaklinks=true
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
 \begin{frame}
-\frametitle{hehe}
+\frametitle{同步方式}
  三种不同的同步信息的方法：
  \begin{itemize}
 \item[1）]push-gossip: 最简单的情况下， 一个节点 p 向 q 发送整个 GlobalMap
@@ -245,7 +245,7 @@ breaklinks=true
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
 \begin{frame}
-\frametitle{hehe}
+\frametitle{通讯方式push-pull}
  ~~~~~~如果把两个节点数据同步一次定义为一个周期，则在一个周期内，push需通信1次，pull需2次，push/pull则需3次，从效果上来讲，push/pull最好，理论上一个周期内可以使两个节点完全一致。直观上也感觉，push/pull的收敛速度是最快的。
 
 ~~~~~~假设每个节点通信周期都能选择（感染）一个新节点，则Gossip算法退化为一个二分查找过程，每个周期构成一个平衡二叉树，收敛速度为$O(n^2)$，对应的时间开销则为$O(\log n)$。这也是Gossip理论上最优的收敛速度。但在实际情况中最优收敛速度是很难达到的，假设某个节点在第i个周期被感染的概率为$p_i$ ,第$i+1$个周期被感染的概率为$p_{i+1}$ ，则pull的方式:
@@ -259,7 +259,55 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
 \begin{frame}
-\frametitle{hehe}
+\frametitle{通讯方式push-pull}
+\begin{center}
+\includegraphics[width=6cm]{pushpull.jpg} 
+\end{center}
+Push, 问B你有什么和我不同, B告诉我, 我把不同部分push给B
+
+Pull, 告诉B我有什么, B把我没有的发给我
+
+Push-pull, 把上面两个同时结合做了, 图的下面两条线箭头画反了
+\end{frame}
+%%%%%%%%%% Slide End %%%%%%%%%%
+
+%%%%%%%%%% One Slide %%%%%%%%%%
+%\subsection{\hfill hehe}
+\begin{frame}
+\frametitle{收敛性对比}
+\begin{center}
+\includegraphics[width=7cm]{pushpullrat.png} 
+\end{center}
+\end{frame}
+%%%%%%%%%% Slide End %%%%%%%%%%
+
+
+%%%%%%%%%%% One Slide %%%%%%%%%%
+%%\subsection{\hfill hehe}
+%\begin{frame}
+%\frametitle{hehe}
+%There are three styles of gossip that are used. In the most
+%basic form, p simply sends μ p to q, and q applies ⊕ to all
+%mappings in μ q . That is, ∀r : μ q (r) = μ q (r) ⊕ μ p (r). This
+%is often referred to as push-gossip. In pull-gossip, p sends to
+%q a digest of its state, which is essentially μ p with the val-
+%ues removed, leaving only the keys and version numbers. q
+%then returns to p only the necessary updates to μ p , avoiding
+%sending values that are not needed. Push-pull-gossip is like
+%pull-gossip, except that q also sends a list of participant-key
+%pairs for which it has outdated entries compared to p. Upon
+%receipt, p sends the corresponding entries of μ p back to q.
+%Push-pull is the most efficient style, and it is the one we
+%focus on in this paper.
+%\end{frame}
+%%%%%%%%%%% Slide End %%%%%%%%%%
+
+
+
+%%%%%%%%%% One Slide %%%%%%%%%%
+%\subsection{\hfill hehe}
+\begin{frame}
+\frametitle{收敛性}
  ~~~~~~显然pull的收敛速度大于push，而每个节点在每个周期被感染的概率都是固定的$p(0<p<1)$，因此Gossip算法是基于p的平方收敛，也成为概率收敛，这在众多的一致性算法中是非常独特的。
 \end{frame}
 %%%%%%%%%% Slide End %%%%%%%%%%
@@ -267,7 +315,7 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
 \begin{frame}
-\frametitle{hehe}
+\frametitle{工作方式}
  Gossip的节点的工作方式又分两种：
  \begin{itemize}
  \item Anti-Entropy（反熵）：以固定的概率传播所有的数据
@@ -285,18 +333,18 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 \end{frame}
 %%%%%%%%%% Slide End %%%%%%%%%%
 
-%%%%%%%%%% One Slide %%%%%%%%%%
-%\subsection{\hfill hehe}
-\begin{frame}
-\frametitle{hehe}
- 在讨论之前先声明几个概念：
- \begin{itemize}
- \item 令N = {p,q,s,...}为需要gossip通信的server集合，有界大小
- \item 令(p1,p2,...)是宿主在节点p上的数据，其中数据有(key,value,version)构成，q的规则与p类似。
- \end{itemize}
-~~~~~~ 为了保证一致性，规定数据的value及version只有宿主节点才能修改，其他节点只能间接通过Gossip协议来请求数据对应的宿主节点修改。
-\end{frame}
-%%%%%%%%%% Slide End %%%%%%%%%%
+%%%%%%%%%%% One Slide %%%%%%%%%%
+%%\subsection{\hfill hehe}
+%\begin{frame}
+%\frametitle{hehe}
+% 在讨论之前先声明几个概念：
+% \begin{itemize}
+% \item 令N = {p,q,s,...}为需要gossip通信的server集合，有界大小
+% \item 令(p1,p2,...)是宿主在节点p上的数据，其中数据有(key,value,version)构成，q的规则与p类似。
+% \end{itemize}
+%~~~~~~ 为了保证一致性，规定数据的value及version只有宿主节点才能修改，其他节点只能间接通过Gossip协议来请求数据对应的宿主节点修改。
+%\end{frame}
+%%%%%%%%%%% Slide End %%%%%%%%%%
 
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
@@ -334,10 +382,11 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 \end{frame}
 %%%%%%%%%% Slide End %%%%%%%%%%
 
+
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
 \begin{frame}
-\frametitle{hehe}
+\frametitle{Cassandra的实现}
  还有三种状态：
  \begin{itemize}
 \item EndpointState：维护宿主数据的全局version，并封装了HeartBeat和\item ApplicationState
@@ -347,10 +396,12 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 \end{frame}
 %%%%%%%%%% Slide End %%%%%%%%%%
 
+
+
 %%%%%%%%%% One Slide %%%%%%%%%%
 %\subsection{\hfill hehe}
 \begin{frame}
-\frametitle{hehe}
+\frametitle{Cassandra的实现}
  Cassandra主要是使用Gossip完成三方面的功能：
 \begin{itemize}
 \item 失败检测
@@ -361,6 +412,24 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 %%%%%%%%%% Slide End %%%%%%%%%%
 
 %%%%%%%%%% One Slide %%%%%%%%%%
+%\subsection{\hfill hehe}
+\begin{frame}
+\frametitle{Cassandra集群试验}
+\begin{center}
+  Averages from the middle 80\% of values
+\begin{tabular}{|l|l|l|}\hline
+  & 1 machine& 5 machines\\\hline
+  interval\_op\_rate          & 10066  & 14246\\\hline
+  interval\_key\_rate         & 10066  & 14246\\\hline
+  latency median            & 3.8  & 1.0\\\hline
+  latency 95th percentile   & 9.5  & 4.3\\\hline
+  latency 99.9th percentile & 93.3  & 109.5\\\hline
+  Total operation time      & 00:01:54     & 00:01:18\\\hline
+\end{tabular}
+\end{center}
+\end{frame}
+%%%%%%%%%% Slide End %%%%%%%%%%
+%%%%%%%%%% One Slide %%%%%%%%%%
 \subsection{\hfill 总结}
 \begin{frame}
 \frametitle{总结}
@@ -370,43 +439,44 @@ $p_{i+1}=p_i(1-\frac{1}{n})^{n(1-p_i)}$
 \end{frame}
 %%%%%%%%%% Slide End %%%%%%%%%%
 
-%%%%%%%%%% One Slide %%%%%%%%%%
-%\subsection{\hfill hehe}
-\begin{frame}
-\frametitle{hehe}
- 
-\end{frame}
-%%%%%%%%%% Slide End %%%%%%%%%%
 
-
-
-%%%%%%%%%% One Slide %%%%%%%%%%
-%\subsection{\hfill hehe}
-\begin{frame}
-\frametitle{hehe}
- 
-\end{frame}
-%%%%%%%%%% Slide End %%%%%%%%%%
-
-
-%%%%%%%%%% One Slide %%%%%%%%%%
-%\subsection{\hfill hehe}
-\begin{frame}
-\frametitle{hehe}
- 
-\end{frame}
-%%%%%%%%%% Slide End %%%%%%%%%%
-
-
-%%%%%%%%%% One Slide %%%%%%%%%%
-%\subsection{\hfill hehe}
-\begin{frame}
-\frametitle{hehe}
- 
-\end{frame}
-%%%%%%%%%% Slide End %%%%%%%%%%
-
-
+%%%%%%%%%%% One Slide %%%%%%%%%%
+%%\subsection{\hfill hehe}
+%\begin{frame}
+%\frametitle{hehe}
+% 
+%\end{frame}
+%%%%%%%%%%% Slide End %%%%%%%%%%
+%
+%
+%
+%%%%%%%%%%% One Slide %%%%%%%%%%
+%%\subsection{\hfill hehe}
+%\begin{frame}
+%\frametitle{hehe}
+% 
+%\end{frame}
+%%%%%%%%%%% Slide End %%%%%%%%%%
+%
+%
+%%%%%%%%%%% One Slide %%%%%%%%%%
+%%\subsection{\hfill hehe}
+%\begin{frame}
+%\frametitle{hehe}
+% 
+%\end{frame}
+%%%%%%%%%%% Slide End %%%%%%%%%%
+%
+%
+%%%%%%%%%%% One Slide %%%%%%%%%%
+%%\subsection{\hfill hehe}
+%\begin{frame}
+%\frametitle{hehe}
+% 
+%\end{frame}
+%%%%%%%%%%% Slide End %%%%%%%%%%
+%
+%
 
 
 \end{document}
